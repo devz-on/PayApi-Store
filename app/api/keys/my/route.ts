@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const payload: any = jwt.verify(token, JWT_SECRET);
     const userId = payload.sub;
     const { db } = await connect();
-    const keys = await db.collection("pay_keys").find({ ownerId: new (require("mongodb").ObjectId)(userId) }).toArray();
+    const keys = await db.collection("apikeys").find({ ownerId: new (require("mongodb").ObjectId)(userId) }).toArray();
     return new Response(JSON.stringify({ keys }), { status: 200 });
   } catch (e) {
     return new Response(JSON.stringify({ keys: [] }), { status: 200 });

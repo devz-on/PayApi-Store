@@ -8,6 +8,6 @@ export async function GET(req: NextRequest) {
   if (!key) return new Response(JSON.stringify({ exists: false }), { status: 400 });
 
   const { db } = await connect();
-  const k = await db.collection("pay_keys").findOne({ key });
+  const k = await db.collection("apikeys").findOne({ key });
   return new Response(JSON.stringify({ exists: !!k, key: k ? k.key : null }), { status: 200 });
 }
