@@ -1,4 +1,5 @@
 // app/api/auth/check/route.ts
+export const dynamic = "force-dynamic";
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 
