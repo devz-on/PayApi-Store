@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ReactNode } from "react";
 import Script from "next/script";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata = {
   title: "Devz Pay Wrapper API",
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
       </head>
-      <body>{children}</body>
+      <body>{children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
