@@ -88,6 +88,9 @@ export async function POST(req: NextRequest) {
         user: "support@devxjin.site",
         pass: process.env.MAIL_PASS!,
       },
+      tls: {
+        rejectUnauthorised: false,
+      },
     });
 
     try {
