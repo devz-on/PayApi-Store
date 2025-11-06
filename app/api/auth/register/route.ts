@@ -82,14 +82,11 @@ export async function POST(req: NextRequest) {
     // send verification email (your SMTP config)
     const transporter = nodemailer.createTransport({
       host: "cp1.dnspark.in",
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: {
         user: "support@devxjin.site",
         pass: process.env.MAIL_PASS!,
-      },
-      tls: {
-        rejectUnauthorised: false,
       },
     });
 
