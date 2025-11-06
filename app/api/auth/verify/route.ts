@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -8,9 +7,8 @@ if (!JWT_SECRET) throw new Error("JWT_SECRET not set");
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
-
-    if (!email || !password) {
+    const { email, otp } = await req.json();
+    if (!email || !otp) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -18,61 +16,52 @@ export async function POST(req: NextRequest) {
     }
 
     const { db } = await connect();
+    const user = await db
+      .collection("users")
+      .findOne({ email: email.toLowerCase() });
 
-    // 🧠 Smart detection:
-    // User can log in with email, username, or phone number
-    let query: any = {};
-
-    if (email.includes("@")) {
-      // Looks like an email
-      query.email = email.toLowerCase();
-    } else if (/^\d{8,15}$/.test(email)) {
-      // All digits, assume phone number
-      query.phone = email;
-    } else {
-      // Otherwise, assume username
-      query.username = email.toLowerCase();
-    }
-
-    const user = await db.collection("users").findOne(query);
-
-    if (!user || !user.passwordHash) {
+    if (!user) {
       return new Response(JSON.stringify({ error: "User not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // 🚫 Block unverified users
-    if (!user.verified) {
-      // Optional cleanup of expired OTPs
-      if (user.otpExpiresAt && new Date(user.otpExpiresAt) < new Date()) {
-        await db.collection("users").updateOne(
-          { _id: user._id },
-          { $unset: { otp: "", otpExpiresAt: "" } }
-        );
-      }
-
+    // ✅ If already verified, stop here
+    if (user.verified) {
       return new Response(
-        JSON.stringify({
-          error:
-            "Your email is not verified. Please verify your account before logging in.",
-        }),
+        JSON.stringify({ error: "Email already verified. Please login." }),
         {
-          status: 403,
+          status: 400,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
 
-    const match = await bcrypt.compare(password, user.passwordHash);
-    if (!match) {
-      return new Response(JSON.stringify({ error: "Invalid password" }), {
+    // ✅ Validate OTP
+    if (!user.otp || user.otp !== otp) {
+      return new Response(JSON.stringify({ error: "Invalid OTP" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       });
     }
 
+    // ✅ Ensure OTP expiry logic exists
+    const now = new Date();
+    if (user.otpExpiresAt && new Date(user.otpExpiresAt) < now) {
+      return new Response(JSON.stringify({ error: "OTP expired" }), {
+        status: 410,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // ✅ Mark verified and remove OTP fields
+    await db.collection("users").updateOne(
+      { _id: user._id },
+      { $set: { verified: true }, $unset: { otp: "", otpExpiresAt: "" } }
+    );
+
+    // ✅ Generate JWT token and login cookie
     const token = jwt.sign(
       { sub: user._id.toString(), email: user.email },
       JWT_SECRET,
@@ -83,15 +72,17 @@ export async function POST(req: NextRequest) {
       60 * 60 * 24 * 30
     }`;
 
+    // ✅ Return success + user info
     return new Response(
       JSON.stringify({
         ok: true,
+        message: "Email verified successfully!",
         user: {
           _id: user._id.toString(),
           email: user.email,
+          name: user.name,
           username: user.username,
           phone: user.phone,
-          name: user.name,
         },
       }),
       {
@@ -103,7 +94,7 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("Verification error:", err);
     return new Response(JSON.stringify({ error: "Server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

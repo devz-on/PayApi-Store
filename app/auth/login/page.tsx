@@ -1,16 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LogIn, Mail, Lock, ArrowLeft } from "lucide-react";
+import { LogIn, Mail, Lock, ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+
+  // ✅ Redirect if already logged in
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (res.ok && data.user) router.push("/dashboard");
+      } catch {}
+    })();
+  }, [router]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,12 +39,12 @@ export default function LoginPage() {
       const data = await res.json();
       if (res.ok && data.ok) {
         setMsg("✅ Login successful! Redirecting...");
-        setTimeout(() => router.push("/dashboard"), 1200);
+        setTimeout(() => router.push("/dashboard"), 1000);
       } else {
         setMsg(`❌ ${data.error || "Login failed"}`);
       }
     } catch (err) {
-      setMsg("❌ Something went wrong. Try again.");
+      setMsg("❌ Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -40,60 +52,74 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#020617] flex items-center justify-center text-white relative overflow-hidden">
-      {/* Animated gradient blobs */}
+      {/* Glowing gradient animation */}
       <motion.div
         className="absolute top-0 left-0 w-[600px] h-[600px] bg-pink-500/30 rounded-full blur-3xl"
-        animate={{ x: [0, 100, 0], y: [0, -60, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ x: [0, 80, 0], y: [0, -60, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-500/30 rounded-full blur-3xl"
-        animate={{ x: [0, -100, 0], y: [0, 50, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ x: [0, -80, 0], y: [0, 60, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="relative z-10 w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg p-8">
+      {/* Login card */}
+      <div className="relative z-10 w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-xl p-8">
         {/* Title */}
         <h1 className="text-3xl font-extrabold mb-6 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-400 to-pink-500 bg-clip-text text-transparent">
-          <LogIn className="text-blue-400" /> Login
+          <LogIn className="text-blue-400" /> Sign in to DevzON
         </h1>
 
         {/* Form */}
         <form onSubmit={submit} className="space-y-4">
+          {/* Email field */}
           <div>
-            <label className="text-sm text-gray-300">Email</label>
+            <label className="text-sm text-gray-300"></label>
             <div className="flex items-center bg-black/30 p-2 rounded-lg border border-white/10 mt-1">
               <Mail className="w-4 h-4 text-pink-400 mr-2" />
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="Username"
                 className="bg-transparent w-full outline-none text-white"
               />
             </div>
           </div>
 
+          {/* Password field with toggle */}
           <div>
-            <label className="text-sm text-gray-300">Password</label>
+            <label className="text-sm text-gray-300"></label>
             <div className="flex items-center bg-black/30 p-2 rounded-lg border border-white/10 mt-1">
               <Lock className="w-4 h-4 text-blue-400 mr-2" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="bg-transparent w-full outline-none text-white"
               />
+              {showPassword ? (
+                <EyeOff
+                  onClick={() => setShowPassword(false)}
+                  className="w-4 h-4 text-gray-400 cursor-pointer"
+                />
+              ) : (
+                <Eye
+                  onClick={() => setShowPassword(true)}
+                  className="w-4 h-4 text-gray-400 cursor-pointer"
+                />
+              )}
             </div>
           </div>
 
-          {/* Status message */}
+          {/* Message */}
           {msg && (
             <p
-              className={`text-center text-sm ${
+              className={`text-center text-sm mt-2 ${
                 msg.startsWith("✅")
                   ? "text-green-400"
                   : msg.startsWith("❌")
@@ -105,16 +131,24 @@ export default function LoginPage() {
             </p>
           )}
 
-          <button
+          {/* Submit button */}
+          <motion.button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 hover:bg-blue-600 rounded-lg py-2 font-semibold transition mt-4 shadow-md"
+            whileTap={{ scale: 0.97 }}
+            className="w-full bg-gradient-to-r from-blue-500 to-pink-500 hover:opacity-90 rounded-lg py-2 font-semibold transition mt-4 flex items-center justify-center gap-2 shadow-md"
           >
-            {loading ? "Signing in..." : "Login"}
-          </button>
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
+              </>
+            ) : (
+              "Login"
+            )}
+          </motion.button>
         </form>
 
-        {/* Register link */}
+        {/* Links */}
         <div className="mt-6 text-center text-sm text-gray-400">
           Don’t have an account?{" "}
           <span
@@ -125,7 +159,7 @@ export default function LoginPage() {
           </span>
         </div>
 
-        {/* Back button */}
+        {/* Back to home */}
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => router.push("/")}
