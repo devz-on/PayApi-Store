@@ -81,36 +81,19 @@ export async function POST(req: NextRequest) {
 
     // send verification email (your SMTP config)
     // send verification email (your SMTP config)
-const transporter = nodemailer.createTransport({
-  host: "cp1.dnspark.in",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "support@devxjin.site",
-    pass: process.env.MAIL_PASS!,
-  },
-  tls: {
-    rejectUnauthorized: false,
-    ciphers: "SSLv3",
-  },
-});
-
-    try {
-      await transporter.sendMail({
-        from: '"DevxJin Support" <support@devxjin.site>',
-        to: normEmail,
-        subject: "Verify your email - DevxJin",
-        html: `<div style="font-family:sans-serif;text-align:center">
-            <h2>Welcome to DevxJin, ${name}!</h2>
-            <p>Your verification code is:</p>
-            <h1 style="letter-spacing:4px;">${otp}</h1>
-            <p>This code expires in 10 minutes.</p>
-           </div>`,
-      });
-    } catch (mailErr) {
-      console.error("Email send error:", mailErr);
-      // keep user created — you can decide to roll back here if you prefer
-    }
+try {
+  await fetch("https://mail.devxjin.site/mail/send.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: normEmail,
+      name,
+      otp,
+    }),
+  });
+} catch (mailErr) {
+  console.error("Mail API error:", mailErr);
+}
 
     return new Response(JSON.stringify({ ok: true, message: "OTP sent. Please verify your email.", userId: insertRes.insertedId.toString() }), { status: 201 });
   } catch (err: any) {
