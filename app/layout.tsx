@@ -11,7 +11,7 @@ export const metadata = {
   description:
     "Beautiful & simple REST API wrapper for Razorpay built by DevzON — create payment QRs and check statuses instantly.",
   icons: {
-    icon: "/logo.jpg", // path in /public
+    icon: "/logo.png", // path in /public
   },
   openGraph: {
     title: "Devz Pay Wrapper API | DevzON",
