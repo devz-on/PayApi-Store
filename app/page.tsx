@@ -62,50 +62,128 @@ export default function Page() {
     curl: `curl -s "https://api.devxjin.net/api/create?api_key=${exampleKey}&amount=${exampleAmt}&format=json" | jq
 
 curl -L "https://api.devxjin.net/api/create/${exampleKey}&${exampleAmt}" --output payment_qr.png`,
-    python: `import requests
+    python: `import os
+import requests
+from dotenv import load_dotenv
 
-API_URL = "https://api.devxjin.net/api/create"
-API_KEY = "${exampleKey}"
+# Load from .env file if available
+load_dotenv()
 
-params = {
-    "api_key": API_KEY,
-    "amount": ${exampleAmt},
-    "format": "json"
+API_KEY = os.getenv("API_KEY", "DEVZ_F5851968D7EC96851968")
+BASE_URL = "https://store.devxjin.site"
+
+def create_payment(amount):
+    url = f"{BASE_URL}/api/create/{API_KEY}&{amount}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        qr_filename = response.text.strip()
+        print(f"QR Generated: {qr_filename}")
+        print(f"Send this QR to user: {BASE_URL}/{qr_filename}")
+        return qr_filename
+    else:
+        print("Error creating payment:", response.text)
+
+def check_payment_status(qr_filename):
+    url = f"{BASE_URL}/api/check/{qr_filename}"
+    response = requests.get(url)
+    print("Payment Status:", response.json())
+
+# Example Usage
+qr_file = create_payment(100)
+check_payment_status(qr_file)`,
+    javascript: `import 'dotenv/config';
+import fetch from 'node-fetch';
+
+const API_KEY = process.env.API_KEY || "DEVZ_F5851968D7EC96851968";
+const BASE_URL = "https://store.devxjin.site";
+
+async function createPayment(amount) {
+  const url = `${BASE_URL}/api/create/${API_KEY}&${amount}`;
+  const res = await fetch(url);
+  const qrFile = (await res.text()).trim();
+  console.log(`QR Generated: ${qrFile}`);
+  console.log(`Send this QR to user: ${BASE_URL}/${qrFile}`);
+  return qrFile;
 }
 
-response = requests.get(API_URL, params=params)
-print(response.json())`,
-    javascript: `const API_URL = "https://api.devxjin.net/api/create";
-const API_KEY = "${exampleKey}";
-
-async function generateQR(amount) {
-  const res = await fetch(\`\${API_URL}?api_key=\${API_KEY}&amount=\${amount}&format=json\`);
+async function checkPaymentStatus(qrFile) {
+  const url = `${BASE_URL}/api/check/${qrFile}`;
+  const res = await fetch(url);
   const data = await res.json();
-  console.log(data);
+  console.log("Payment Status:", data);
 }
 
-generateQR(${exampleAmt});`,
+(async () => {
+  const qr = await createPayment(50);
+  await checkPaymentStatus(qr);
+})();`,
     php: `<?php
-$apiKey = "${exampleKey}";
-$amount = ${exampleAmt};
-$url = "https://api.devxjin.net/api/create?api_key=$apiKey&amount=$amount&format=json";
-$response = file_get_contents($url);
-$data = json_decode($response, true);
-print_r($data);
+$API_KEY = getenv("API_KEY") ?: "DEVZ_F5851968D7EC96851968";
+$BASE_URL = "https://store.devxjin.site";
+
+function createPayment($amount) {
+    global $BASE_URL, $API_KEY;
+    $url = "$BASE_URL/api/create/$API_KEY&$amount";
+    $qrFile = trim(file_get_contents($url));
+    echo "QR Generated: $qrFile\n";
+    echo "Send this QR to user: $BASE_URL/$qrFile\n";
+    return $qrFile;
+}
+
+function checkPaymentStatus($qrFile) {
+    global $BASE_URL;
+    $url = "$BASE_URL/api/check/$qrFile";
+    $response = file_get_contents($url);
+    $data = json_decode($response, true);
+    print_r($data);
+}
+
+$qr = createPayment(20);
+checkPaymentStatus($qr);
 ?>`,
     go: `package main
 
 import (
-  "fmt"
-  "net/http"
-  "io/ioutil"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 )
 
+var (
+	API_KEY  = getenv("API_KEY", "DEVZ_F5851968D7EC96851968")
+	BASE_URL = "https://store.devxjin.site"
+)
+
+func getenv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
+
+func createPayment(amount int) string {
+	url := fmt.Sprintf("%s/api/create/%s&%d", BASE_URL, API_KEY, amount)
+	resp, _ := http.Get(url)
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	qrFile := string(body)
+	fmt.Println("QR Generated:", qrFile)
+	fmt.Println("Send this QR to user:", BASE_URL+"/"+qrFile)
+	return qrFile
+}
+
+func checkPaymentStatus(qrFile string) {
+	url := fmt.Sprintf("%s/api/check/%s", BASE_URL, qrFile)
+	resp, _ := http.Get(url)
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("Payment Status:", string(body))
+}
+
 func main() {
-  url := "https://api.devxjin.net/api/create?api_key=${exampleKey}&amount=${exampleAmt}&format=json"
-  resp, _ := http.Get(url)
-  body, _ := ioutil.ReadAll(resp.Body)
-  fmt.Println(string(body))
+	qr := createPayment(10)
+	checkPaymentStatus(qr)
 }`,
   };
 
