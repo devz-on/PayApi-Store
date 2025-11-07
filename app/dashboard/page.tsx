@@ -126,8 +126,7 @@ export default function DashboardPage() {
           className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-lg mb-10"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
+          transition={{ duration: 0.6, delay: 0.2 }}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <KeyRound className="text-pink-400" />
@@ -135,29 +134,54 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={() => router.push("/pricing")}
-              className="text-sm bg-pink-500 hover:bg-pink-600 px-3 py-1 rounded-lg font-semibold transition"
-            >
+              className="text-sm bg-pink-500 hover:bg-pink-600 px-3 py-1 rounded-lg font-semibold transition">
               + Buy More
             </button>
           </div>
-
+        
           {keys.length === 0 ? (
             <p className="text-gray-400 text-sm text-center">
               You haven’t purchased any API keys yet.
             </p>
           ) : (
             <div className="space-y-3">
-              {keys.map((k, i) => (
-                <div
-                  key={i}
-                  className="bg-black/40 p-4 rounded-lg border border-white/10 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 text-xs sm:text-sm font-mono"
-                >
-                  <span className="text-gray-100 break-all">{k.key}</span>
-                  <span className="text-gray-400">
-                    {new Date(k.createdAt).toLocaleString()}
-                  </span>
-                </div>
-              ))}
+              {keys.map((k, i) => {
+                const expiry = new Date(k.expiresAt);
+                const isExpired = expiry.getTime() < Date.now();
+        
+                return (
+                  <div
+                    key={i}
+                    className={`p-4 rounded-lg border ${
+                      isExpired
+                        ? "bg-black/40 border-red-500/30"
+                        : "bg-black/40 border-green-500/30"
+                    } flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 text-xs sm:text-sm font-mono`}>
+                    {/* Key & Badge */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <span className="text-gray-100 break-all">{k.key}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${
+                          isExpired
+                            ? "bg-red-500/20 text-red-400 border border-red-500/40"
+                            : "bg-green-500/20 text-green-400 border border-green-500/40"
+                        }`}
+                      >
+                        {isExpired ? "Expired" : "Active"}
+                      </span>
+                    </div>
+        
+                    {/* Expiry Info */}
+                    <div className="flex flex-col text-right text-gray-400 text-[11px] sm:text-xs">
+                      <span>Created: {new Date(k.createdAt).toLocaleString()}</span>
+                      <span>
+                        Expires: {expiry.toLocaleDateString()}{" "}
+                        {isExpired && "(Expired)"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </motion.div>
