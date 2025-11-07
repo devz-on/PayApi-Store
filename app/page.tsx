@@ -98,16 +98,16 @@ const API_KEY = process.env.API_KEY || "DEVZ_F5851968D7EC96851968";
 const BASE_URL = "https://store.devxjin.site";
 
 async function createPayment(amount) {
-  const url = `${BASE_URL}/api/create/${API_KEY}&${amount}`;
+  const url = \`\${BASE_URL}/api/create/\${API_KEY}&\${amount}\`;
   const res = await fetch(url);
   const qrFile = (await res.text()).trim();
-  console.log(`QR Generated: ${qrFile}`);
-  console.log(`Send this QR to user: ${BASE_URL}/${qrFile}`);
+  console.log(\`QR Generated: \${qrFile}\`);
+  console.log(\`Send this QR to user: \${BASE_URL}/\${qrFile}\`);
   return qrFile;
 }
 
 async function checkPaymentStatus(qrFile) {
-  const url = `${BASE_URL}/api/check/${qrFile}`;
+  const url = \`\${BASE_URL}/api/check/\${qrFile}\`;
   const res = await fetch(url);
   const data = await res.json();
   console.log("Payment Status:", data);
@@ -116,7 +116,7 @@ async function checkPaymentStatus(qrFile) {
 (async () => {
   const qr = await createPayment(50);
   await checkPaymentStatus(qr);
-})();`,
+})();``,
     php: `<?php
 $API_KEY = getenv("API_KEY") ?: "DEVZ_F5851968D7EC96851968";
 $BASE_URL = "https://store.devxjin.site";
