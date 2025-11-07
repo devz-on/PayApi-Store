@@ -67,12 +67,8 @@ export default function Page() {
 curl -L "https://api.devxjin.net/api/create/${exampleKey}&${exampleAmt}" --output payment_qr.png`,
     python: `import os
 import requests
-from dotenv import load_dotenv
 
-# Load from .env file if available
-load_dotenv()
-
-API_KEY = os.getenv("API_KEY", "DEVZ_F5851968D7EC96851968")
+API_KEY = "DEVZ_F5851968D7EC96851968"
 BASE_URL = "https://store.devxjin.site"
 
 def create_payment(amount):
@@ -91,13 +87,11 @@ def check_payment_status(qr_filename):
     response = requests.get(url)
     print("Payment Status:", response.json())
 
-# Example Usage
 qr_file = create_payment(100)
 check_payment_status(qr_file)`,
-    javascript: `import 'dotenv/config';
-import fetch from 'node-fetch';
+    javascript: `import fetch from 'node-fetch';
 
-const API_KEY = process.env.API_KEY || "DEVZ_F5851968D7EC96851968";
+const API_KEY = "DEVZ_F5851968D7EC96851968";
 const BASE_URL = "https://store.devxjin.site";
 
 async function createPayment(amount) {
@@ -121,7 +115,7 @@ async function checkPaymentStatus(qrFile) {
   await checkPaymentStatus(qr);
 })();`,
     php: `<?php
-$API_KEY = getenv("API_KEY") ?: "DEVZ_F5851968D7EC96851968";
+$API_KEY = "DEVZ_F5851968D7EC96851968";
 $BASE_URL = "https://store.devxjin.site";
 
 function createPayment($amount) {
@@ -154,16 +148,9 @@ import (
 )
 
 var (
-	API_KEY  = getenv("API_KEY", "DEVZ_F5851968D7EC96851968")
+	API_KEY  = "DEVZ_F5851968D7EC96851968"
 	BASE_URL = "https://store.devxjin.site"
 )
-
-func getenv(key, fallback string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return fallback
-}
 
 func createPayment(amount int) string {
 	url := fmt.Sprintf("%s/api/create/%s&%d", BASE_URL, API_KEY, amount)
