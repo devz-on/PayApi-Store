@@ -116,7 +116,7 @@ async function checkPaymentStatus(qrFile) {
 (async () => {
   const qr = await createPayment(50);
   await checkPaymentStatus(qr);
-})();``,
+})();`,
     php: `<?php
 $API_KEY = getenv("API_KEY") ?: "DEVZ_F5851968D7EC96851968";
 $BASE_URL = "https://store.devxjin.site";
