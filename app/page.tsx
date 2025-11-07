@@ -178,7 +178,7 @@ func main() {
           transition={{ duration: 1 }}
         >
           <h2 className="text-xl sm:text-2xl font-semibold text-center mb-6 text-blue-300">
-            📊 API Usage (Demo)
+            📊 API Usage
           </h2>
           <div className="h-60 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
