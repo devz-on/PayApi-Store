@@ -62,9 +62,9 @@ export default function Page() {
 
   // 🧩 Code Snippets for Multiple Languages
   const codeSnippets: Record<string, string> = {
-    curl: `curl -s "https://api.devxjin.net/api/create?api_key=${exampleKey}&amount=${exampleAmt}&format=json" | jq
+    curl: `curl -s "https://store.devxjin.site/api/create?api_key=${exampleKey}&amount=${exampleAmt}&format=json" | jq
 
-curl -L "https://api.devxjin.net/api/create/${exampleKey}&${exampleAmt}" --output payment_qr.png`,
+curl -L "https://store.devxjin.site/api/create/${exampleKey}&${exampleAmt}" --output payment_qr.png`,
     python: `import os
 import requests
 
