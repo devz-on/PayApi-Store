@@ -25,6 +25,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+
 
 export default function Page() {
   const router = useRouter();
@@ -310,9 +313,33 @@ func main() {
           </div>
 
           <div className="relative">
-            <pre className="text-xs sm:text-sm text-gray-300 font-mono bg-[#111827] p-4 rounded-lg overflow-x-auto">
-              {codeSnippets[lang]}
-            </pre>
+            <div className="relative rounded-lg overflow-hidden">
+              <SyntaxHighlighter
+                language={lang}
+                style={oneDark}
+                customStyle={{
+                  margin: 0,
+                  padding: "1rem",
+                  background: "#0d1117",
+                  borderRadius: "0.75rem",
+                  fontSize: "0.85rem",
+                  lineHeight: "1.4em",
+                  overflowX: "auto",
+                }}
+                showLineNumbers
+                wrapLongLines
+              >
+                {codeSnippets[lang]}
+              </SyntaxHighlighter>
+
+              <button
+                onClick={() => copyToClipboard(codeSnippets[lang])}
+                className="absolute top-3 right-3 text-gray-400 hover:text-white transition"
+              >
+                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+
             <button
               onClick={() => copyToClipboard(codeSnippets[lang])}
               className="absolute top-3 right-3 text-gray-400 hover:text-white transition"

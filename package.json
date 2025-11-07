@@ -22,6 +22,7 @@
     "razorpay": "^2.9.6",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-syntax-highlighter": "^16.1.0",
     "recharts": "^3.3.0"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@types/nodemailer": "^7.0.3",
     "@types/react": "18.2.66",
     "@types/react-dom": "18.2.23",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "autoprefixer": "^10.4.21",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.5",
