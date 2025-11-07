@@ -23,9 +23,6 @@ or `GET /api/check/<link_id>.png` (the `.png` is ignored)
 pnpm i    # or npm i / yarn
 pnpm dev  # run locally
 pnpm build && pnpm start  # production
-# push to GitHub and import in Vercel
+# Fork the repo and import in Vercel
 ```
 
-No environment variables are required.
-
----
