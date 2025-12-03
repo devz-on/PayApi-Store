@@ -2,7 +2,6 @@
 import { NextRequest } from "next/server";
 import connect from "@/lib/mongo";
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
 
 function normalizeUsername(u: string) {
   return u.trim().toLowerCase();
@@ -18,33 +17,32 @@ export async function POST(req: NextRequest) {
   try {
     const { name, username, email, phone, password } = await req.json();
 
-    if (!name || !username || !email || !phone || !password)
+    if (!name || !username || !email || !phone || !password) {
       return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400 });
+    }
 
-    const normEmail = normalizeEmail(email);
     const normUsername = normalizeUsername(username);
+    const normEmail = normalizeEmail(email);
     const normPhone = normalizePhone(phone);
 
-    // basic validation
-    if (!/^[a-z0-9_]{3,30}$/.test(normUsername))
-      return new Response(JSON.stringify({ error: "Invalid username. Use 3-30 letters, numbers or _." }), { status: 400 });
+    // Basic validation
+    if (!/^[a-z0-9_]{3,30}$/.test(normUsername)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid username. Use 3-30 letters, numbers or _." }),
+        { status: 400 }
+      );
+    }
 
-    if (!/^\+?\d{8,15}$/.test(normPhone))
-      return new Response(JSON.stringify({ error: "Invalid phone. Use digits, 8-15 chars, optional leading +'." }), { status: 400 });
+    if (!/^\+?\d{8,15}$/.test(normPhone)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid phone. Use digits, 8-15 chars, optional leading +." }),
+        { status: 400 }
+      );
+    }
 
     const { db } = await connect();
 
-    // attempt to create unique indexes (no-op if already there). Wrap in try to avoid failing on duplicates.
-    try {
-      await db.collection("users").createIndex({ email: 1 }, { unique: true });
-      await db.collection("users").createIndex({ username: 1 }, { unique: true });
-      await db.collection("users").createIndex({ phone: 1 }, { unique: true, sparse: true });
-    } catch (e) {
-      // ignore index creation errors in runtime (log for debug)
-      console.warn("Index creation notice:", (e as any).message || e);
-    }
-
-    // check for existing conflicts
+    // Check for existing conflicts
     const existing = await db.collection("users").findOne({
       $or: [{ email: normEmail }, { username: normUsername }, { phone: normPhone }],
     });
@@ -62,7 +60,10 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: "Conflict" }), { status: 409 });
     }
 
+    // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
+
+    // OTP generation
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const now = new Date();
     const otpExpiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes
@@ -76,30 +77,38 @@ export async function POST(req: NextRequest) {
       verified: false,
       otp,
       otpExpiresAt,
-      createdAt: new Date(),
+      createdAt: now,
     });
 
-    // send verification email (your SMTP config)
-    // send verification email (your SMTP config)
-try {
-  await fetch("https://mail.devxjin.site/mail/send.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: normEmail,
-      name,
-      otp,
-    }),
-  });
-} catch (mailErr) {
-  console.error("Mail API error:", mailErr);
-}
+    // Send verification email
+    try {
+      const mailRes = await fetch("https://mail.devxjin.site/mail/send.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normEmail, name, otp }),
+      });
 
-    return new Response(JSON.stringify({ ok: true, message: "OTP sent. Please verify your email.", userId: insertRes.insertedId.toString() }), { status: 201 });
+      if (!mailRes.ok) {
+        const text = await mailRes.text();
+        console.error("Mail API error:", text);
+      }
+    } catch (mailErr) {
+      console.error("Mail fetch failed:", mailErr);
+    }
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        message: "OTP sent. Please verify your email.",
+        userId: insertRes.insertedId.toString(),
+        otpExpiresAt, // optional, frontend can know expiry
+      }),
+      { status: 201 }
+    );
   } catch (err: any) {
     console.error("Register error:", err);
 
-    // handle duplicate-key race-case (if index caught duplicate during insert)
+    // Handle duplicate-key race-case
     if (err?.code === 11000 && err?.keyValue) {
       const key = Object.keys(err.keyValue)[0];
       return new Response(JSON.stringify({ error: `${key} already in use`, field: key }), { status: 409 });
